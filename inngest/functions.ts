@@ -1,15 +1,18 @@
-// src/inngest/functions.ts
 import { inngest } from "./client";
-
-export const processTask = inngest.createFunction(
-  { id: "process-task", triggers: { event: "app/task.created" } },
-  async ({ event, step }) => {
-    const result = await step.run("handle-task", async () => {
-      return { processed: true, id: event.data.id };
+import { gemini, createAgent } from "@inngest/agent-kit";
+export const helloWorld = inngest.createFunction(
+  { id: "hello-world", triggers: { event: "app/hello.world" } },
+  async ({ event }) => {
+    const codeAgent = createAgent({
+      name: "code-agent",
+      system: "You are and expert next.j developer. You write readble, maintainable code. You write simpel Next.js & React snippets.",
+      model: gemini({ model: "gemini-2.5-flash" }),
     });
+    const { output } = await codeAgent.run(
+      `Write the followin snippet ${event.data.value}`,
+    );
+    console.log(output);
 
-    await step.sleep("pause", "10s");
-
-    return { message: `Task ${event.data.id} complete`, result };
-  }
+    return { output};
+  },
 );
